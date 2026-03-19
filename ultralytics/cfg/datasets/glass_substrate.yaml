@@ -1,1 +1,11 @@
-/root/datasets/glass_subtrate/glass_substrate.yaml
+path: /root/datasets/glass_substrate # dataset root dir
+train: train.txt # train images (relative to 'path') 4 images
+val: val.txt # val images (relative to 'path') 4 images
+test: test.txt # test images (optional)
+
+names:
+  0: "0"
+  1: "1"
+  2: "2"
+  3: "3"
+  4: "4"
