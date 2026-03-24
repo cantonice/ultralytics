@@ -7,8 +7,8 @@ from ultralytics import YOLO
 def main(opt):
     yaml = opt.cfg
     weights = opt.weights
-    # model = YOLO(yaml) # 使用这一行 就是直接加载yaml文件训练
-    model = YOLO(weights)  # 使用这一行 就是直接加载权重文件进行训练
+    model = YOLO(yaml) # 使用这一行 就是直接加载yaml文件训练
+    # model = YOLO(weights)  # 使用这一行 就是直接加载权重文件进行训练
     # model = YOLO(yaml).load(weights) # 加载yaml配置文件的同时，加载权重进行训练
 
     model.info()
@@ -18,6 +18,7 @@ def main(opt):
                         imgsz=640, 
                         workers=8, 
                         batch=8,
+                        device = "cuda"
                         )
 
 def parse_opt(known=False):
