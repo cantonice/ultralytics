@@ -1,0 +1,23 @@
+id: det_glass_yolo26n_ablate_comp_spatial_e200
+notes: "Composition ablation: SFParallelConv spatial-only"
+
+model: ultralytics/cfg/models/26/yolo26n-sf-spatial.yaml
+weights: /root/yolo26n.pt
+data: ultralytics/cfg/datasets/glass_substrate.yaml
+project: runs/sf
+name: det_glass_yolo26n_ablate_comp_spatial_e200
+
+a_meta:
+  suite: composition_v1
+  variant: spatial_only
+  branch: spatial
+
+train:
+  epochs: 200
+  imgsz: 640
+  batch: 16
+  workers: 8
+  device: 0
+  seed: 0
+  deterministic: true
+  pretrained: true

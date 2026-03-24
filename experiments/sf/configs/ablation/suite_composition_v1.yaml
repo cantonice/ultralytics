@@ -1,0 +1,12 @@
+suite: composition_v1
+summary: "Ablation on SF module composition"
+
+experiments:
+  - label: baseline
+    config: experiments/sf/configs/ablation/ablate_comp_baseline_yolo26n.yaml
+  - label: spatial_only
+    config: experiments/sf/configs/ablation/ablate_comp_spatial_yolo26n.yaml
+  - label: freq_only
+    config: experiments/sf/configs/ablation/ablate_comp_freq_yolo26n.yaml
+  - label: parallel_both
+    config: experiments/sf/configs/ablation/ablate_comp_parallel_yolo26n.yaml

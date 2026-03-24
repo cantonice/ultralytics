@@ -1,0 +1,5 @@
+label,run_name,status,best_mAP50_95,best_mAP50,best_precision,best_recall
+baseline,det_glass_yolo26n_ablate_comp_baseline_e200,finished,0.84074,0.9666,0.93159,0.93307
+spatial_only,det_glass_yolo26n_ablate_comp_spatial_e200,finished,0.81608,0.94362,0.87692,0.93406
+freq_only,det_glass_yolo26n_ablate_comp_freq_e200,finished,0.82677,0.95629,0.93274,0.90529
+parallel_both,det_glass_yolo26n_ablate_comp_parallel_e200,finished,0.82438,0.95148,0.93251,0.88595
