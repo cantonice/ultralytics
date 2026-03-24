@@ -64,6 +64,7 @@ from ultralytics.nn.modules import (
     ResNetLayer,
     RTDETRDecoder,
     SCDown,
+    SFParallelConv,
     Segment,
     Segment26,
     TorchVision,
@@ -1606,6 +1607,7 @@ def parse_model(d, ch, verbose=True):
             RepC3,
             PSA,
             SCDown,
+            SFParallelConv,
             C2fCIB,
             A2C2f,
         }

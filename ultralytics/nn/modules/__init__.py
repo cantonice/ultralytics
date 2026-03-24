@@ -76,6 +76,7 @@ from .conv import (
     RepConv,
     SpatialAttention,
 )
+from .freq import SFParallelConv
 from .head import (
     OBB,
     OBB26,
@@ -175,6 +176,7 @@ __all__ = (
     "RepVGGDW",
     "ResNetLayer",
     "SCDown",
+    "SFParallelConv",
     "Segment",
     "Segment26",
     "SpatialAttention",

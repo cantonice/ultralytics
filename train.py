@@ -14,10 +14,10 @@ def main(opt):
     model.info()
 
     results = model.train(data='glass_substrate.yaml',  # 训练参数均可以重新设置
-                        epochs=20, 
+                        epochs=200, 
                         imgsz=640, 
                         workers=8, 
-                        batch=8,
+                        batch=16,
                         device = "cuda"
                         )
 
