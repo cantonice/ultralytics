@@ -1,0 +1,10 @@
+suite: sf_v2_compare
+summary: "SF v2 compare: baseline vs v1 vs v2"
+
+experiments:
+  - label: baseline
+    config: experiments/sf/configs/ablation/v2/ablate_v2_baseline_yolo26n.yaml
+  - label: sf_v1
+    config: experiments/sf/configs/ablation/v2/ablate_v2_parallel_v1_yolo26n.yaml
+  - label: sf_v2
+    config: experiments/sf/configs/ablation/v2/ablate_v2_parallel_v2_yolo26n.yaml

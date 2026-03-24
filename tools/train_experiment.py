@@ -15,6 +15,7 @@ import copy
 from pathlib import Path
 import sys
 from pprint import pformat
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -66,6 +67,15 @@ def resolve_cfg(cfg: dict, args: argparse.Namespace) -> dict:
     if "data" not in resolved:
         raise ValueError("Missing required field: data")
 
+    # Keep experiment naming consistent with overridden epochs, e.g. *_e20 -> *_e200.
+    # This avoids confusing run names when users pass --epochs from CLI.
+    if args.auto_epoch_suffix and args.epochs is not None and args.name is None:
+        epoch_suffix = f"_e{train['epochs']}"
+        if isinstance(resolved.get("name"), str):
+            resolved["name"] = re.sub(r"_e\d+$", epoch_suffix, resolved["name"])
+        if isinstance(resolved.get("id"), str):
+            resolved["id"] = re.sub(r"_e\d+$", epoch_suffix, resolved["id"])
+
     return resolved
 
 
@@ -101,6 +111,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch", type=int, default=None, help="Override batch size")
     parser.add_argument("--imgsz", type=int, default=None, help="Override image size")
     parser.add_argument("--device", type=str, default=None, help="Override device, e.g. 0 or cpu")
+    parser.add_argument(
+        "--auto-epoch-suffix",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Auto-update trailing _eXX in id/name when --epochs is overridden (default: true)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Only build model and print config")
     parser.add_argument(
         "--dry-run-load-weights",
