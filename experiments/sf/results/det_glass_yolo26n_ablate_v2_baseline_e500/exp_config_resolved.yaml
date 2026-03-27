@@ -1,22 +1,19 @@
-id: det_glass_yolo26n_ablate_v2_baseline_e200
-notes: "SF-v2 compare baseline (amp=false, e200 default)"
-
+id: det_glass_yolo26n_ablate_v2_baseline_e500
+notes: SF-v2 compare baseline (amp=false, e200 default)
 model: ultralytics/cfg/models/26/yolo26.yaml
 weights: /root/yolo26n.pt
 data: ultralytics/cfg/datasets/glass_substrate.yaml
-project: /root/ultralytics/runs/sf_v2_cmp
-name: det_glass_yolo26n_ablate_v2_baseline_e200
-
+project: /root/ultralytics/runs/sf_manual_20260326_111030
+name: det_glass_yolo26n_ablate_v2_baseline_e500
 a_meta:
   suite: sf_v2_compare
   variant: baseline
-
 train:
-  epochs: 200
+  epochs: 500
   imgsz: 640
   batch: 16
   workers: 8
-  device: 0
+  device: '0'
   seed: 0
   amp: true
   deterministic: true

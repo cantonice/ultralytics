@@ -1,16 +1,13 @@
-id: det_glass_yolo26n_ablate_v2_baseline_e200
-notes: "SF-v2 compare baseline (amp=false, e200 default)"
-
-model: ultralytics/cfg/models/26/yolo26.yaml
+id: det_glass_yolo26n_ablate_v2_parallel_v2_e200
+notes: SF-v2 compare parallel v2 gated fusion + freq gate (amp=false, e200 default)
+model: ultralytics/cfg/models/26/yolo26n-sf-v2.yaml
 weights: /root/yolo26n.pt
 data: ultralytics/cfg/datasets/glass_substrate.yaml
 project: /root/ultralytics/runs/sf_v2_cmp
-name: det_glass_yolo26n_ablate_v2_baseline_e200
-
+name: det_glass_yolo26n_ablate_v2_parallel_v2_e200
 a_meta:
   suite: sf_v2_compare
-  variant: baseline
-
+  variant: sf_v2
 train:
   epochs: 200
   imgsz: 640
@@ -18,6 +15,6 @@ train:
   workers: 8
   device: 0
   seed: 0
-  amp: true
+  amp: false
   deterministic: true
   pretrained: true

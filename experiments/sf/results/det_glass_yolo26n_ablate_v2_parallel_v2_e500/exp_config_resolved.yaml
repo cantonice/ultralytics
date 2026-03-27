@@ -1,0 +1,20 @@
+id: det_glass_yolo26n_ablate_v2_parallel_v2_e500
+notes: SF-v2 compare parallel v2 gated fusion + freq gate (amp=false, e200 default)
+model: ultralytics/cfg/models/26/yolo26n-sf-v2.yaml
+weights: /root/yolo26n.pt
+data: ultralytics/cfg/datasets/glass_substrate.yaml
+project: /root/ultralytics/runs/sf_manual_20260327_140327
+name: det_glass_yolo26n_ablate_v2_parallel_v2_e500
+a_meta:
+  suite: sf_v2_compare
+  variant: sf_v2
+train:
+  epochs: 500
+  imgsz: 640
+  batch: 16
+  workers: 8
+  device: '0'
+  seed: 0
+  amp: false
+  deterministic: true
+  pretrained: true

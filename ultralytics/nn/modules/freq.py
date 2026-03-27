@@ -12,7 +12,18 @@ from .conv import Conv
 class FrequencyBranch(nn.Module):
     """A lightweight frequency-domain branch using FFT -> 1x1 mixing -> iFFT."""
 
-    def __init__(self, c1, c2, s=1, act=True, gate=False, gate_reduction=4):
+    def __init__(
+        self,
+        c1,
+        c2,
+        s=1,
+        act=True,
+        gate=False,
+        gate_reduction=4,
+        mode="vanilla",
+        residual=False,
+        alpha=0.5,
+    ):
         """Initialize frequency branch.
 
         Args:
@@ -22,9 +33,18 @@ class FrequencyBranch(nn.Module):
             act (bool | nn.Module): Activation function.
             gate (bool): Whether to apply channel gating on frequency features.
             gate_reduction (int): Channel reduction ratio in gate MLP.
+            mode (str): One of {"vanilla", "highpass"} for pre-FFT processing.
+            residual (bool): Whether to add residual blending from downsampled input.
+            alpha (float): Initial scale for frequency residual output.
         """
         super().__init__()
+        if mode not in {"vanilla", "highpass"}:
+            raise ValueError(f"Invalid mode='{mode}'. Expected one of ['vanilla', 'highpass'].")
+
+        self.mode = mode
+        self.residual = bool(residual)
         self.down = nn.AvgPool2d(kernel_size=s, stride=s) if s > 1 else nn.Identity()
+        self.hp = nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
         self.mix = nn.Conv2d(2 * c1, 2 * c2, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn = nn.BatchNorm2d(2 * c2)
         self.act = Conv.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
@@ -41,6 +61,8 @@ class FrequencyBranch(nn.Module):
             if self.use_gate
             else nn.Identity()
         )
+        self.res_proj = Conv(c1, c2, k=1, s=1, act=False) if self.residual and c1 != c2 else nn.Identity()
+        self.alpha = nn.Parameter(torch.tensor(float(alpha))) if self.residual else None
 
     def forward(self, x):
         """Apply frequency branch to input tensor.
@@ -54,13 +76,17 @@ class FrequencyBranch(nn.Module):
         x = self.down(x)
         h, w = x.shape[-2:]
 
-        xf = torch.fft.rfft2(x, norm="ortho")
+        x_fft = x - self.hp(x) if self.mode == "highpass" else x
+        xf = torch.fft.rfft2(x_fft, norm="ortho")
         ri = torch.cat((xf.real, xf.imag), dim=1)
         ri = self.act(self.bn(self.mix(ri)))
 
         real, imag = ri.chunk(2, dim=1)
         out = torch.fft.irfft2(torch.complex(real, imag), s=(h, w), norm="ortho")
-        return out * self.gate(out)
+        out = out * self.gate(out)
+        if self.residual:
+            return self.res_proj(x) + torch.tanh(self.alpha) * out
+        return out
 
 
 class SFParallelConv(nn.Module):
@@ -85,6 +111,9 @@ class SFParallelConv(nn.Module):
         fuse_mode="concat",
         freq_gate=False,
         gate_reduction=4,
+        freq_mode="vanilla",
+        freq_residual=False,
+        freq_alpha=0.5,
     ):
         """Initialize spatial-frequency parallel conv block.
 
@@ -100,6 +129,9 @@ class SFParallelConv(nn.Module):
             fuse_mode (str): One of {"concat", "sum", "gated"} when branch="both".
             freq_gate (bool): Enable channel gate in frequency branch.
             gate_reduction (int): Channel reduction ratio in gate MLP.
+            freq_mode (str): One of {"vanilla", "highpass"} for frequency branch.
+            freq_residual (bool): Whether to add residual blending in frequency branch.
+            freq_alpha (float): Initial frequency residual scale.
         """
         super().__init__()
         if branch not in {"both", "spatial", "freq"}:
@@ -111,12 +143,26 @@ class SFParallelConv(nn.Module):
         self.fuse_mode = fuse_mode
         self.spatial = Conv(c1, c2, k, s, p, g, act=act) if branch in {"both", "spatial"} else None
         self.freq = (
-            FrequencyBranch(c1, c2, s=s, act=act, gate=freq_gate, gate_reduction=gate_reduction)
+            FrequencyBranch(
+                c1,
+                c2,
+                s=s,
+                act=act,
+                gate=freq_gate,
+                gate_reduction=gate_reduction,
+                mode=freq_mode,
+                residual=freq_residual,
+                alpha=freq_alpha,
+            )
             if branch in {"both", "freq"}
             else None
         )
         self.fuse = Conv(2 * c2, c2, k=1, s=1, act=act) if branch == "both" and fuse_mode == "concat" else None
-        self.mix_gate = nn.Conv2d(2 * c2, c2, kernel_size=1, bias=True) if branch == "both" and fuse_mode == "gated" else None
+        self.mix_gate = (
+            nn.Conv2d(2 * c2, 2 * c2, kernel_size=1, bias=True)
+            if branch == "both" and fuse_mode == "gated"
+            else None
+        )
 
     def forward(self, x):
         """Forward pass."""
@@ -126,8 +172,10 @@ class SFParallelConv(nn.Module):
                 return self.fuse(torch.cat((xs, xf), dim=1))
             if self.fuse_mode == "sum":
                 return 0.5 * (xs + xf)
-            gate = torch.sigmoid(self.mix_gate(torch.cat((xs, xf), dim=1)))
-            return gate * xs + (1.0 - gate) * xf
+            b, c, h, w = xs.shape
+            gate = self.mix_gate(torch.cat((xs, xf), dim=1)).view(b, 2, c, h, w)
+            gate = torch.softmax(gate, dim=1)
+            return gate[:, 0] * xs + gate[:, 1] * xf
         if self.branch == "spatial":
             return self.spatial(x)
         return self.freq(x)
