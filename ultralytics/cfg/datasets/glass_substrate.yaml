@@ -4,8 +4,8 @@ val: val.txt # val images (relative to 'path') 4 images
 test: test.txt # test images (optional)
 
 names:
-  0: "0"
-  1: "1"
-  2: "2"
-  3: "3"
-  4: "4"
+  0: "cellosilk"
+  1: "black_spot"
+  2: "fragment"
+  3: "crack"
+  4: "scratch"

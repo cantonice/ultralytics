@@ -7,18 +7,21 @@ from ultralytics import YOLO
 def main(opt):
     yaml = opt.cfg
     weights = opt.weights
-    model = YOLO(yaml) # 使用这一行 就是直接加载yaml文件训练
-    # model = YOLO(weights)  # 使用这一行 就是直接加载权重文件进行训练
+    # model = YOLO(yaml) # 使用这一行 就是直接加载yaml文件训练
+    model = YOLO(weights)  # 使用这一行 就是直接加载权重文件进行训练
     # model = YOLO(yaml).load(weights) # 加载yaml配置文件的同时，加载权重进行训练
 
     model.info()
 
     results = model.train(data='glass_substrate.yaml',  # 训练参数均可以重新设置
-                        epochs=20, 
+                        epochs=10, 
                         imgsz=640, 
                         workers=8, 
-                        batch=8,
-                        device = "cuda"
+                        batch=16,
+                        device = "cuda",
+                        project = '/root/autodl-tmp/light_result',
+                        name = 'baseline',
+                        visualize = True
                         )
 
 def parse_opt(known=False):

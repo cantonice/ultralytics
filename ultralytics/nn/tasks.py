@@ -18,6 +18,7 @@ from ultralytics.nn.modules import (
     C2PSA,
     C3,
     C3TR,
+    DSConv,
     ELAN1,
     OBB,
     OBB26,
@@ -232,6 +233,10 @@ class BaseModel(torch.nn.Module):
         """
         if not self.is_fused():
             for m in self.model.modules():
+                # DSConv wraps depthwise + pointwise convolutions and is not compatible with
+                # generic single-conv fusion (`fuse_conv_and_bn`) used for Conv/DWConv.
+                if isinstance(m, DSConv):
+                    continue
                 if isinstance(m, (Conv, Conv2, DWConv)) and hasattr(m, "bn"):
                     if isinstance(m, Conv2):
                         m.fuse_convs()
@@ -1585,6 +1590,7 @@ def parse_model(d, ch, verbose=True):
             C2fPSA,
             C2PSA,
             DWConv,
+            DSConv,
             Focus,
             BottleneckCSP,
             C1,

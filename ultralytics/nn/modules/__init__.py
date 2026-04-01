@@ -76,6 +76,10 @@ from .conv import (
     RepConv,
     SpatialAttention,
 )
+from .dsconv import (
+    DSConv,
+    DSConv2d,
+)
 from .head import (
     OBB,
     OBB26,
@@ -116,6 +120,8 @@ __all__ = (
     "CBAM",
     "CIB",
     "DFL",
+    "DSConv",
+    "DSConv2d",
     "ELAN1",
     "MLP",
     "OBB",
