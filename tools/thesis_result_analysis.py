@@ -26,6 +26,10 @@ METRIC_MAP = {
 }
 
 
+# IEEE-friendly, colorblind-safe palette.
+IEEE_COLORS = ["#4c72b0", "#dd8452", "#55a868", "#c44e52", "#8172b3", "#da8bc3"]
+
+
 def infer_variant(run_name: str) -> str:
     name = run_name.lower()
     if "baseline" in name:
@@ -128,7 +132,14 @@ def plot_grouped_metrics(selected: pd.DataFrame, out: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(10, 5), dpi=200)
     for i, (k, vals) in enumerate(data.items()):
-        ax.bar(x + (i - 1.5) * width, vals, width, label=k)
+        bars = ax.bar(
+            x + (i - 1.5) * width,
+            vals,
+            width,
+            label=k,
+            color=IEEE_COLORS[i % len(IEEE_COLORS)],
+        )
+        ax.bar_label(bars, fmt="%.3f", padding=2, fontsize=13)
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
@@ -157,14 +168,26 @@ def plot_delta_bar(delta_df: pd.DataFrame, out: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(10, 4.8), dpi=200)
     for i, c in enumerate(cols):
-        ax.bar(x + (i - 1.5) * width, data[c].to_numpy(), width, label=col_names[i])
+        bars = ax.bar(
+            x + (i - 1.5) * width,
+            data[c].to_numpy(),
+            width,
+            label=col_names[i],
+            color=IEEE_COLORS[i % len(IEEE_COLORS)],
+        )
+        ax.bar_label(bars, fmt="%+.2f", padding=2, fontsize=13)
 
     ax.axhline(0, color="black", linewidth=1)
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     all_vals = np.concatenate([data[c].to_numpy() for c in cols])
-    lim = max(1.0, np.max(np.abs(all_vals)) * 1.25)
-    ax.set_ylim(-lim, lim)
+    vmin = float(np.min(all_vals))
+    vmax = float(np.max(all_vals))
+    spread = max(0.5, vmax - vmin)
+    upper = vmax + spread * 0.2
+    # Keep a small area under zero for readability, avoid large empty lower space.
+    lower = min(-0.2, vmin - spread * 0.08)
+    ax.set_ylim(lower, upper)
     ax.set_ylabel("Delta vs baseline (pp)")
     ax.set_title("Relative gains over baseline")
     ax.grid(axis="y", alpha=0.25)
@@ -177,10 +200,16 @@ def plot_delta_bar(delta_df: pd.DataFrame, out: Path) -> None:
 
 def plot_convergence(run_dirs: list[Path], out: Path) -> None:
     fig, ax = plt.subplots(figsize=(10, 5), dpi=200)
-    for run_dir in run_dirs:
+    for i, run_dir in enumerate(run_dirs):
         df = pd.read_csv(run_dir / "results.csv").sort_values("epoch")
         label = infer_variant(run_dir.name)
-        ax.plot(df["epoch"], df[METRIC_MAP["mAP50_95"]], label=label, linewidth=1.6)
+        ax.plot(
+            df["epoch"],
+            df[METRIC_MAP["mAP50_95"]],
+            label=label,
+            linewidth=1.6,
+            color=IEEE_COLORS[i % len(IEEE_COLORS)],
+        )
 
     ax.set_xlabel("Epoch")
     ax.set_ylabel("mAP50-95")
@@ -199,9 +228,10 @@ def plot_efficiency(selected: pd.DataFrame, out: Path) -> None:
     y = selected["best_mAP50_95"].to_numpy()
     labels = selected["variant"].tolist()
 
-    ax.scatter(x, y, s=80)
-    for xi, yi, label in zip(x, y, labels):
-        ax.annotate(label, (xi, yi), textcoords="offset points", xytext=(6, 4), fontsize=9)
+    colors = [IEEE_COLORS[i % len(IEEE_COLORS)] for i in range(len(labels))]
+    ax.scatter(x, y, s=80, c=colors)
+    for xi, yi, label, color in zip(x, y, labels, colors):
+        ax.annotate(label, (xi, yi), textcoords="offset points", xytext=(6, 4), fontsize=13)
 
     ax.set_xlabel("Training time (hours)")
     ax.set_ylabel("Best mAP50-95")
@@ -269,10 +299,12 @@ def normalize_style() -> None:
             "figure.facecolor": "white",
             "axes.facecolor": "white",
             "savefig.facecolor": "white",
-            "font.size": 10,
-            "axes.titlesize": 12,
-            "axes.labelsize": 10,
-            "legend.fontsize": 9,
+            "font.size": 13,
+            "axes.titlesize": 13,
+            "axes.labelsize": 13,
+            "legend.fontsize": 13,
+            "xtick.labelsize": 13,
+            "ytick.labelsize": 13,
         }
     )
 
